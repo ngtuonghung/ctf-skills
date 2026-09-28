@@ -6,6 +6,8 @@
 - [House of Einherjar — Off-by-One Null Byte (0xFun 2026)](#house-of-einherjar--off-by-one-null-byte-0xfun-2026)
 - [Heap Exploitation](#heap-exploitation)
   - [Heap Grooming via Application Operations (Codegate 2013)](#heap-grooming-via-application-operations-codegate-2013)
+  - [malloc_consolidate Triggers](#malloc_consolidate-triggers)
+  - [TLS Corruption via Large mmap Allocation](#tls-corruption-via-large-mmap-allocation)
 - [Custom Allocator Exploitation](#custom-allocator-exploitation)
   - [talloc Pool Header Forgery for Arbitrary Read/Write (Boston Key Party 2016)](#talloc-pool-header-forgery-for-arbitrary-readwrite-boston-key-party-2016)
 - [Classic Heap Unlink Attack (Crypto-Cat)](#classic-heap-unlink-attack-crypto-cat)
@@ -169,6 +171,21 @@ fake_chunk = flat({
 - Create holes of specific sizes by allocating then freeing
 - Place target structures adjacent to overflow source
 - Use spray patterns with incremental offsets (e.g., 0x200 steps)
+- Put guard chunks around data that must not consolidate when a nearby free could merge with the top or another bin
+
+### malloc_consolidate Triggers
+
+Fastbin chunks can be merged into the unsorted bin, exposing `main_arena` pointers:
+
+- Request a size larger than the fastbin maximum (commonly above `0x400`).
+- Exhaust or disturb the top chunk so consolidation is required.
+- Free a sufficiently large neighboring chunk and force consolidation across it.
+
+Application-level triggers include a large `scanf` allocation, a long padding format such as `printf("%10000c")`, `malloc_trim()`, or an allocator policy change through `mallopt()`.
+
+### TLS Corruption via Large mmap Allocation
+
+On glibc targets, an allocation large enough to force `mmap` can land immediately before TLS. If a heap overflow or OOB primitive reaches forward from that mapping, subsequent corruption can reach TLS-resident values such as the stack guard/canary, tcache state, or destructor pointers. Verify the mapping order in GDB for the exact target libc rather than assuming a fixed threshold.
 
 ### Heap Grooming via Application Operations (Codegate 2013)
 

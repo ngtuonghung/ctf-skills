@@ -10,7 +10,7 @@ metadata:
 
 # CTF Binary Exploitation (Pwn)
 
-Quick reference for binary exploitation (pwn) CTF challenges. Each technique has a one-liner here; see supporting files for full details.
+Quick reference for binary exploitation (pwn) CTF challenges. Start with the Linux userland attack playbook for end-to-end target triage; each technique has a one-liner here and a specialized deep dive in the supporting files.
 
 ## Prerequisites
 
@@ -53,6 +53,8 @@ gem install one_gadget seccomp-tools
 
 ### Linux userland
 
+- [attack-playbook.md](references/linux-userland/attack-playbook.md) - Linux/glibc workflow: entry-point recon, leak-source selection, write-target/version constraints, payload choice, and routing into format-string, heap, FSOP, ROP/SROP, shellcode, and seccomp techniques
+- [static-signals.md](references/linux-userland/static-signals.md) - Exploitability evidence from ELF/static artifacts: libc, seccomp, GNU_STACK/NX, PIE/RELRO, static/stripped builds, and canary coverage, with required runtime caveats
 - [overflow-basics.md](references/linux-userland/overflow-basics.md) - Stack/global buffer overflow, ret2win, canary bypass, canary byte-by-byte brute force on forking servers, struct pointer overwrite, signed integer bypass, hidden gadgets, stride-based OOB read leak, parser stack overflow via unchecked memcpy length with callee-saved register restoration
 - [rop-and-shellcode.md](references/linux-userland/rop-and-shellcode.md) - Core ROP chains (ret2libc, syscall ROP, rdx control, shell interaction), ret2csu, bad character XOR bypass, exotic x86 gadgets (BEXTR/XLAT/STOSB/PEXT), stack pivot via xchg rax,esp, sprintf() gadget chaining for bad character bypass, canary XOR epilogue as RDX zeroing gadget, stub_execveat syscall as execve alternative via read() return value
 - [rop-advanced.md](references/linux-userland/rop-advanced.md) - Advanced ROP techniques: double stack pivot to BSS via leave;ret, SROP (Sigreturn-Oriented Programming) with UTF-8 constraints, seccomp bypass, RETF architecture switch (x64→x32) for seccomp bypass, shellcode with input reversal, .fini_array hijack, ret2vdso, pwntools template, x32 ABI syscall aliasing for seccomp bypass, time-based blind shellcode exfiltration
@@ -138,6 +140,8 @@ bash -c '{ echo "cmd1"; echo "cmd2"; sleep 1; } | nc host port'
 | RELRO | Full | GOT is read-only - need alternative targets (hooks, vtables, return addr) |
 | NX | Enabled | Can't execute shellcode on stack/heap - use ROP or ret2win |
 | Canary | Present | Stack smash detected - need leak or avoid stack overflow (use heap) |
+
+Static signals only rank exploitability candidates; check the required runtime condition before claiming impact. See [static-signals.md](references/linux-userland/static-signals.md).
 
 **Quick decision tree:**
 - Partial RELRO + No PIE -> GOT overwrite (easiest, use fixed addresses)
