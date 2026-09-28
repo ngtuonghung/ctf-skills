@@ -13,7 +13,7 @@
 - [Heap Overlap via Base Conversion](#heap-overlap-via-base-conversion)
 - [Tree Data Structure Stack Underallocation](#tree-data-structure-stack-underallocation)
 - [ret2dlresolve](#ret2dlresolve)
-- [Kernel Exploitation](#kernel-exploitation) (basic; see [kernel.md](kernel.md) for full coverage)
+- [Kernel Exploitation](#kernel-exploitation) (basic; see [kernel.md](../linux-kernel/kernel.md) for full coverage)
 - [9-Byte test+je Timing Leak (hxp 2018)](#9-byte-testje-timing-leak-hxp-2018)
 - [RtlCaptureContext Deterministic Windows Stack Leak (Insomnihack 2017)](#rtlcapturecontext-deterministic-windows-stack-leak-insomnihack-2017)
 - [IEEE 754 Double-as-Shellcode via Exponent Fixing (Kaspersky 2018)](#ieee-754-double-as-shellcode-via-exponent-fixing-kaspersky-2018)
@@ -224,7 +224,7 @@ fake_sym_st_name = fake_string_addr - STRTAB
 
 ## Kernel Exploitation
 
-For comprehensive kernel exploitation techniques, see [kernel.md](kernel.md). Quick reference:
+For comprehensive kernel exploitation techniques, see [kernel.md](../linux-kernel/kernel.md). Quick reference:
 
 - `modprobe_path` overwrite for root code execution (requires AAW)
 - `tty_struct` kROP via fake vtable and stack pivot

@@ -113,11 +113,11 @@ def discover_skills() -> list[Path]:
 def count_techniques(skill_dir: Path) -> list[dict[str, str]]:
     """List technique files in a skill directory."""
     techniques = []
-    for md in sorted(skill_dir.glob("*.md")):
+    for md in sorted(skill_dir.rglob("*.md")):
         if md.name == "SKILL.md":
             continue
         name = md.stem.replace("-", " ").replace("_", " ").title()
-        techniques.append({"name": name, "file": md.name})
+        techniques.append({"name": name, "file": md.relative_to(skill_dir).as_posix()})
     return techniques
 
 
