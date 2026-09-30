@@ -12,6 +12,12 @@ metadata:
 
 Quick reference for binary exploitation (pwn) CTF challenges. Start with the Linux userland attack playbook for end-to-end target triage; each technique has a one-liner here and a specialized deep dive in the supporting files.
 
+## pwnable.tw Router
+
+**Start here when the target is known or reasonably suspected to be pwnable.tw.** Evidence includes an explicit platform statement, a pwnable.tw service/banner, a historical pwnable.tw flag, the challenge name, a recorded pwnable.tw port, or a matching challenge menu. Do not guess solely from a generic vulnerability class.
+
+Open [`references/linux-userland/pwnable-tw/README.md#decision-router`](references/linux-userland/pwnable-tw/README.md#decision-router). Select the row whose trigger, root-cause defect, exploit primitive, libc/protection clues, or aliases match the target. Follow that row directly to one challenge anchor. Read `Metadata`, `Facts`, `Exploit Paths`, then `Assets and Provenance`. Use the generic ROP, heap, format-string, shellcode, and seccomp references only after choosing the matching case or when adapting the technique to a different target.
+
 ## Prerequisites
 
 **Python packages (all platforms):**
@@ -68,6 +74,8 @@ gem install one_gadget seccomp-tools
 - [advanced-exploits-3.md](references/linux-userland/advanced-exploits-3.md) - Advanced exploit techniques (part 3): stack variable overlap / carry corruption OOB, 1-byte overflow via 8-bit loop counter, game AI arithmetic mean OOB read, arbitrary read/write GOT overwrite to shell, stack leak via __environ + memcpy overflow, JIT sandbox escape via uint16 jump truncation, DNS compression pointer stack overflow with multi-question ROP, ELF code signing bypass via program header manipulation, game level format signed/unsigned coordinate mismatch, file descriptor inheritance via missing O_CLOEXEC, sign extension integer underflow in metadata parsing, ROP chain construction with read-only primitive, 4-byte shellcode with timing side-channel via persistent registers, CRC oracle as arbitrary read, UTF-8 case conversion buffer overflow
 - [advanced-exploits-5.md](references/linux-userland/advanced-exploits-5.md) - Advanced exploit techniques (part 5): data-interpretation exploitation — Chip-8 emulator OOB memory for ret2libc, double-precision float quicksort canary repositioning, bloom filter abs(INT_MIN) negative index OOB write
 - [field-notes.md](references/linux-userland/field-notes.md) - Detailed pwn notes: heap exploitation quick reference, additional exploit notes, useful commands
+- [pwnable-tw/README.md](references/linux-userland/pwnable-tw/README.md) - Known-platform Decision Router for all 43 pwnable.tw exploitation routes: return-address/canary overflow, arbitrary write, stack pivot, ret2libc, syscall ROP, ret2csu, SROP, ret2dlresolve, format string, byte/timing oracle, UAF, double free, tcache/fastbin/unsorted-bin control, House attacks, unsafe unlink, C++ copy/destructor/vtable confusion, fake `_IO_FILE`, `fclose`/stdout/stdin hijack, alphanumeric/printable/RWX shellcode, seccomp/BPF/ORW, and restricted-bash/chroot/FD escape. Each row gives the trigger, root cause, primitive/result, exact case anchor, aliases, libc/protection clues, and variant boundary.
+- [pwnable-tw/source-red-flags.md](references/linux-userland/pwnable-tw/source-red-flags.md) - Source-audit router for all 28 archived vulnerability patterns: oversized `read`/`memcpy`, `gets`/`scanf("%s")`/`strcpy`, user-controlled counts, `sprintf`/`strcat`/`realpath` expansion, off-by-NUL, `strncat`, free-without-null, `realloc(ptr,0)`, missing C++ copy constructor, repeated/error-path frees, signed/menu/parser indexes, missing NUL, uninitialized `malloc`/stack data, direct `printf`, unchecked downcast, by-value `operator=`, stack object in heap list, unsafe unlink, attacker-length `strncmp`, and termination/timing oracles. Each row maps the API/shape to meaning and exploit consequence.
 
 ### Linux kernel
 
